@@ -1,0 +1,17 @@
+{
+  "name": "soundmap",
+  "version": "1.0.0",
+  "description": "",
+  "main": "sketch.js",
+  "scripts": {
+    "start": "http-server -c-1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "p5": "^1.4.0",
+    "p5.geolocation": "^0.5.1",
+    "http-server": "^14.1.1"
+  }
+}
