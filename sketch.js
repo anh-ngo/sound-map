@@ -2,9 +2,10 @@
 let x, y, fence, userIcon;
 let [ latMin, latMax, lonMin, lonMax ] = [ 60.19528, 60.20006, 25.13053, 25.13762 ]
 let [ isInside, userLocationAvailable ] = [ false, false ];
-let polygonsData, fences = [], images = [], audioFiles = [], audioTimers = [];
+let polygonsData, fences = [], images = [], audioFiles = [];
 let imageSizes = [[611, 1058], [524, 479], [327, 290]];
 let audioNames = ['audio1.mp3', 'audio2.mp3', 'audio3.mp3'];
+let audioTimers = new Array(audioNames.length);
 
 function preload() {
   for (let i = 0; i < audioNames.length; i++) {
@@ -69,16 +70,16 @@ function positionChanged(position) {
 function draw(){
   background("#ebdfc5"); // Clear the canvas
 
-  fill("#fff"); 
+  noFill(); 
   polygonsData.forEach((polygon, index) => {
     drawShapeFromJSON(polygon, index);
   });
 
-  if (userLocationAvailable) {
+  if(userLocationAvailable) {
     push();
     translate(x, y);
     imageMode(CENTER);
-    image(userIcon, 0, 0, 30, 30);
+    image(userIcon, 0, 0, 20, 20);
     pop();
   }
 }
@@ -94,7 +95,6 @@ function gpsToPixelY(valY) {
 function drawShapeFromJSON(data, index){
   noStroke();
   imageMode(CENTER);
-  //noFill();
 
   beginShape();
   let totalX = 0;
@@ -119,9 +119,9 @@ function drawShapeFromJSON(data, index){
   push();
   translate(centroidX, centroidY);
 
-  let imgTranslationX = [13, 12, 3];
-  let imgTranslationY = [20, 1, 5];
-  let imgScale = [0.41, 0.4, 0.5];
+  let imgTranslationX = [12, 12, 3];
+  let imgTranslationY = [20, -1, 5];
+  let imgScale = [0.4, 0.37, 0.5];
   translate(imgTranslationX[index % imgTranslationX.length], imgTranslationY[index % imgTranslationY.length]);
   
   let imgWidth = imageSizes[index % imageSizes.length][0] * imgScale[index % imgScale.length];
@@ -133,30 +133,41 @@ function drawShapeFromJSON(data, index){
 let currentPlayingAudio = null;
 
 function insideThePolygon(index){
-    console.log("Inside Polygon: " + index);
-    if (audioFiles[index]) {
-      console.log("Playing audio: " + audioNames[index]);
+  console.log("Inside Polygon: " + index);
+  if (audioFiles[index]) {
+    console.log("Playing audio: " + audioNames[index]);
+
+    // Delay of 3 seconds before audio is played
+    setTimeout(() => {
       audioFiles[index].play();
       if (!audioFiles[index].isPlaying()) {
         console.log("Failed to play audio: " + audioNames[index]);
       }
-    } else {
-      console.log("No audio file for index: " + index);
-    }
-  if (currentPlayingAudio !== null) {
-    audioFiles[currentPlayingAudio].stop();
+    }, 3000);
+    
+  } else {
+    console.log("No audio file for index: " + index);
   }
-  clearTimeout(audioTimers[index]);
-  audioFiles[index].play();
+  
+  if (currentPlayingAudio !== null && currentPlayingAudio !== index) {
+    audioTimers[currentPlayingAudio] = setTimeout(() => {
+      audioFiles[currentPlayingAudio].stop();
+    }, 3000);
+  }
+
   currentPlayingAudio = index;
 }
 
 function outsideThePolygon(index){
   console.log("Outside Polygon: " + index);
-  audioFiles[index].stop();
-  if (currentPlayingAudio === index) {
-    currentPlayingAudio = null;
-  }
+
+  // Add a delay before the audio is stopped
+  audioTimers[index] = setTimeout(() => {
+    if(audioFiles[index]){
+      audioFiles[index].stop();
+      currentPlayingAudio = null;
+    }
+  }, 5000); // Delay of 5 seconds (5000 milliseconds)
 }
 
 function simulatePositionChange() {
@@ -185,3 +196,15 @@ function pointInPolygon(x, y, polygon) {
   }
   return inside;
 }
+
+let openButton = document.getElementById('open-button');
+let closeButton = document.getElementById('close-button');
+let popup = document.getElementById('popup');
+
+openButton.addEventListener('click', function() {
+  popup.style.display = 'flex';
+});
+
+closeButton.addEventListener('click', function() {
+  popup.style.display = 'none';
+});

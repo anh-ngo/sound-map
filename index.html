@@ -9,17 +9,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
   <body>
-    <script src="sketch.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.svg/1.0.2/p5.svg.min.js"></script>
 
     <!-- input fields to debug -->
     <div id="canvas-container">
+      <div id="popup" class="popup">
+        <div class="popup-content">
+          <h2>Just a few tips to enjoy:</h2>
+          <div>
+            <ul>
+              <li>＊ Keep your screen open during the trip to ensure a smooth experience.</li>
+              <li>＊ Go to different locations to experience the sound.</li>
+              <li>＊ Stay or leave the areas to activate or stop the audio.</li>
+            </ul>
+          </div>
+          <button id="close-button">Back to map</button>
+        </div>
+      </div>
       <div id="input-container">
           Latitude: <input type="text" id="latitudeInput" value="60.19960">
           Longitude: <input type="text" id="longitudeInput" value="25.13227">
           <button id="simulatePosition">Simulate Position</button>
       </div>
-  </div>
+    </div>
+    
+    <button id="open-button">?</button>
+    <script src="sketch.js"></script>
   </body>
 </html>
