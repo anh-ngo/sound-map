@@ -36,8 +36,8 @@ function setup() {
   };
   
   watchPosition(positionChanged, watchOptions);
-  let simulatePositionButton = select("#simulatePosition");
-  simulatePositionButton.mouseClicked(simulatePositionChange);
+  // let simulatePositionButton = select("#simulatePosition");
+  // simulatePositionButton.mouseClicked(simulatePositionChange);
   
   polygonsData.forEach((polygon, index) => {
     let fence = new geoFencePolygon(
@@ -50,24 +50,32 @@ function setup() {
   });
 }
 
-//update this to track real user locations later
+//update this function to track real user locations later
 function positionChanged(position) {
+  if (!position || !position.coords) {
+    console.log('Could not get position:', position);
+    return;
+  }
+
+  let lat = position.latitude;
+  let lon = position.longitude;
+  
   // Check if the user is within the boundary
-  if (position.latitude >= latMin && position.latitude <= latMax &&
-      position.longitude >= lonMin && position.longitude <= lonMax) {
+  if (lat >= latMin && lat <= latMax && lon >= lonMin && lon <= lonMax) {
     // User is inside the boundary
-    x = map(position.longitude, lonMin, lonMax, 0, width);
-    y = map(position.latitude, latMin, latMax, height, 0);
+    x = map(lon, lonMin, lonMax, 0, width);
+    y = map(lat, latMin, latMax, height, 0);
 
     // Check if the user's position is inside any polygon
     fences.forEach((fenceObj, index) => {
-      if (pointInPolygon(position.longitude, position.latitude, fenceObj.points)) {
+      if (pointInPolygon(lon, lat, fenceObj.points)) {
         insideThePolygon(index);
       } else {
         outsideThePolygon(index);
       }
     });
 
+    // Hide the popup
     boundaryPopup.style.display = 'none';
 
     userLocationAvailable = true;
@@ -80,9 +88,9 @@ function positionChanged(position) {
   }
 }
 
-// hello
+
 function draw(){
-  background("#ebdfc5"); // Clear the canvas
+  background("#ebdfc5"); 
 
   noFill(); 
   polygonsData.forEach((polygon, index) => {
@@ -192,17 +200,17 @@ function outsideThePolygon(index){
 }
 
 //remove when tracking real user locations
-function simulatePositionChange() {
-  let latInput = select("#latitudeInput");
-  let lonInput = select("#longitudeInput");
+// function simulatePositionChange() {
+//   let latInput = select("#latitudeInput");
+//   let lonInput = select("#longitudeInput");
 
-  let simulatedPosition = {
-    latitude: parseFloat(latInput.value()),
-    longitude: parseFloat(lonInput.value())
-  };
+//   let simulatedPosition = {
+//     latitude: parseFloat(latInput.value()),
+//     longitude: parseFloat(lonInput.value())
+//   };
 
-  positionChanged(simulatedPosition); // update the position on the canvas
-}
+//   positionChanged(simulatedPosition); // update the position on the canvas
+// }
 
 //Important! check the initial state of user's location for the callbacks to work
 function pointInPolygon(x, y, polygon) {
