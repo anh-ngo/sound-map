@@ -50,20 +50,34 @@ function setup() {
   });
 }
 
+//update this to track real user locations later
 function positionChanged(position) {
-  x = map(position.longitude, lonMin, lonMax, 0, width);
-  y = map(position.latitude, latMin, latMax, height, 0);
+  // Check if the user is within the boundary
+  if (position.latitude >= latMin && position.latitude <= latMax &&
+      position.longitude >= lonMin && position.longitude <= lonMax) {
+    // User is inside the boundary
+    x = map(position.longitude, lonMin, lonMax, 0, width);
+    y = map(position.latitude, latMin, latMax, height, 0);
 
-  // Check if the user's position is inside any polygon
-  fences.forEach((fenceObj, index) => {
-    if (pointInPolygon(position.longitude, position.latitude, fenceObj.points)) {
-      insideThePolygon(index);
-    } else {
-      outsideThePolygon(index);
-    }
-  });
+    // Check if the user's position is inside any polygon
+    fences.forEach((fenceObj, index) => {
+      if (pointInPolygon(position.longitude, position.latitude, fenceObj.points)) {
+        insideThePolygon(index);
+      } else {
+        outsideThePolygon(index);
+      }
+    });
 
-  userLocationAvailable = true;
+    boundaryPopup.style.display = 'none';
+
+    userLocationAvailable = true;
+  } else {
+    // User is outside the boundary
+    // Show the popup
+    boundaryPopup.style.display = 'flex';
+
+    userLocationAvailable = false;
+  }
 }
 
 
@@ -131,27 +145,33 @@ function drawShapeFromJSON(data, index){
 }
 
 let currentPlayingAudio = null;
+let isAudioPlaying = new Array(audioNames.length).fill(false);
 
 function insideThePolygon(index){
   console.log("Inside Polygon: " + index);
   if (audioFiles[index]) {
     console.log("Playing audio: " + audioNames[index]);
 
-    // Delay of 3 seconds before audio is played
-    setTimeout(() => {
-      audioFiles[index].play();
-      if (!audioFiles[index].isPlaying()) {
-        console.log("Failed to play audio: " + audioNames[index]);
-      }
-    }, 3000);
+    // Play audio only if it is not already playing
+    if (!isAudioPlaying[index]) {
+      setTimeout(() => {
+        audioFiles[index].play();
+        isAudioPlaying[index] = true;
+
+        if (!audioFiles[index].isPlaying()) {
+          console.log("Failed to play audio: " + audioNames[index]);
+        }
+      }, 3000);
+    }
     
   } else {
     console.log("No audio file for index: " + index);
   }
-  
+
   if (currentPlayingAudio !== null && currentPlayingAudio !== index) {
     audioTimers[currentPlayingAudio] = setTimeout(() => {
       audioFiles[currentPlayingAudio].stop();
+      isAudioPlaying[currentPlayingAudio] = false;
     }, 3000);
   }
 
@@ -165,11 +185,13 @@ function outsideThePolygon(index){
   audioTimers[index] = setTimeout(() => {
     if(audioFiles[index]){
       audioFiles[index].stop();
+      isAudioPlaying[index] = false;
       currentPlayingAudio = null;
     }
-  }, 5000); // Delay of 5 seconds (5000 milliseconds)
+  }, 3000);
 }
 
+//remove when tracking real user locations
 function simulatePositionChange() {
   let latInput = select("#latitudeInput");
   let lonInput = select("#longitudeInput");
@@ -208,3 +230,13 @@ openButton.addEventListener('click', function() {
 closeButton.addEventListener('click', function() {
   popup.style.display = 'none';
 });
+
+let boundaryPopup = document.getElementById('boundary-popup');
+let boundaryCloseButton = document.getElementById('boundary-close-button');
+boundaryCloseButton.addEventListener('click', function() {
+  boundaryPopup.style.display = 'none';
+});
+
+
+
+

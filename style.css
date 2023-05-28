@@ -109,7 +109,7 @@ li {
   margin: 20px auto;
 }
 
-#open-button, #close-button {
+#open-button, #close-button, #boundary-close-button {
   background-color: #ffffff;
   border: dashed 0.5px black;
   padding: 5px;
