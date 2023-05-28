@@ -52,11 +52,6 @@ function setup() {
 
 //update this function to track real user locations later
 function positionChanged(position) {
-  if (!position || !position.coords) {
-    console.log('Could not get position:', position);
-    return;
-  }
-
   let lat = position.latitude;
   let lon = position.longitude;
   
