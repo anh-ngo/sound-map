@@ -127,6 +127,11 @@ li {
   border-radius: 5px;
 }
 
+#google-maps-link {
+  color: black;
+  text-decoration: underline;
+}
+
 @media (max-width: 700px) {
 
   .popup {

@@ -56,7 +56,7 @@ function positionChanged(position) {
     console.log('Could not get position:', position);
     return;
   }
-  
+
   let lat = position.latitude;
   let lon = position.longitude;
   console.log('User position: Latitude -', lat, 'Longitude -', lon);
@@ -246,6 +246,8 @@ boundaryCloseButton.addEventListener('click', function() {
   boundaryPopup.style.display = 'none';
 });
 
+let googleMapsLink = document.getElementById('google-maps-link');
+googleMapsLink.href = 'https://goo.gl/maps/9CdiX8tEcJZjqnqN9?coh=178572&entry=tt';
 
 
 
