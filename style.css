@@ -20,7 +20,7 @@ body, html {
 h2 {
   font-family: 'Headline', serif;
   font-style: italic;
-  text-decoration: underline dashed 0.5px;
+  text-decoration: dashed 1px black;
   font-weight: 500;
 }
 
@@ -117,7 +117,7 @@ li {
 
 #open-button, #close-button, #boundary-close-button {
   background-color: #ffffff;
-  border: dashed 0.5px black;
+  border: 1px dashed black;
   padding: 5px;
   text-align: center;
   text-decoration: none;
