@@ -80,7 +80,7 @@ function positionChanged(position) {
   }
 }
 
-
+// hello
 function draw(){
   background("#ebdfc5"); // Clear the canvas
 
