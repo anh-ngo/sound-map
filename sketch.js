@@ -52,8 +52,14 @@ function setup() {
 
 //update this function to track real user locations later
 function positionChanged(position) {
+  if (!position) {
+    console.log('Could not get position:', position);
+    return;
+  }
+  
   let lat = position.latitude;
   let lon = position.longitude;
+  console.log('User position: Latitude -', lat, 'Longitude -', lon);
   
   // Check if the user is within the boundary
   if (lat >= latMin && lat <= latMax && lon >= lonMin && lon <= lonMax) {
