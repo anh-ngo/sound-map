@@ -5,7 +5,6 @@ let [ isInside, userLocationAvailable ] = [ false, false ];
 let polygonsData, fences = [], images = [], audioFiles = [];
 let imageSizes = [[611, 1058], [524, 479], [327, 290]];
 let audioNames = ['test1.mp3', 'test2.mp3', 'test3.mp3'];
-// let audioTimers = new Array(audioNames.length);
 
 function preload() {
   for (let i = 0; i < audioNames.length; i++) {
@@ -30,14 +29,12 @@ function setup() {
   canvas.parent("canvas-container");
   
   watchOptions = {
-   enableHighAccuracy: true,
-   timeout: 500,
-   maximumAge: 0
+    enableHighAccuracy: true,
+    timeout: 500,
+    maximumAge: 0
   };
   
   watchPosition(positionChanged, watchOptions);
-  // let simulatePositionButton = select("#simulatePosition");
-  // simulatePositionButton.mouseClicked(simulatePositionChange);
   
   polygonsData.forEach((polygon, index) => {
     let fence = new geoFencePolygon(
@@ -48,7 +45,15 @@ function setup() {
     );
     fences.push({ points: polygon.geometry.coordinates[0], fence: fence });
   });
+
+  // Add button for getting user interaction to start audio
+  let button = createButton('Click to start audio');
+  button.mousePressed(() => {
+    userStartAudio();
+    button.hide();
+  });
 }
+
 
 //update this function to track real user locations later
 function positionChanged(position) {
@@ -158,17 +163,26 @@ let isAudioPlaying = new Array(audioNames.length).fill(false);
 function insideThePolygon(index){
   console.log("Inside Polygon: " + index);
   if (audioFiles[index]) {
-    console.log("Playing audio: " + audioNames[index]);
+    console.log("Loading audio: " + audioNames[index]);
 
-    // Play audio only if it is not already playing
-    if (!isAudioPlaying[index]) {
-      audioFiles[index].play();
-      isAudioPlaying[index] = true;
+    // Check if the audio file is loaded before playing it
+    if(audioFiles[index].isLoaded()){
+      console.log("Audio loaded successfully: " + audioNames[index]);
 
-      if (!audioFiles[index].isPlaying()) {
-        console.log("Failed to play audio: " + audioNames[index]);
+      // Play audio only if it is not already playing
+      if (!isAudioPlaying[index]) {
+        audioFiles[index].play();
+        isAudioPlaying[index] = true;
+
+        if (!audioFiles[index].isPlaying()) {
+          console.log("Failed to play audio: " + audioNames[index]);
+        }
       }
-    } 
+
+    } else {
+      console.log("Audio file is not yet loaded: " + audioNames[index]);
+    }
+    
   } else {
     console.log("No audio file for index: " + index);
   }
@@ -181,9 +195,11 @@ function insideThePolygon(index){
   currentPlayingAudio = index;
 }
 
+
 function outsideThePolygon(index){
   console.log("Outside Polygon: " + index);
 
+  // Immediately stop the audio when the user leaves the polygon
   if(audioFiles[index]){
     audioFiles[index].stop();
     isAudioPlaying[index] = false;
