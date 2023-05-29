@@ -46,11 +46,11 @@ function setup() {
     fences.push({ points: polygon.geometry.coordinates[0], fence: fence });
   });
 
-  // Add button for getting user interaction to start audio
-  let button = createButton('Click to start audio');
-  button.mousePressed(() => {
+  // Add event listener to the HTML button for getting user interaction to start audio
+  let audioStartButton = document.getElementById('audio-start-button');
+  audioStartButton.addEventListener('click', function() {
     userStartAudio();
-    button.hide();
+    this.style.display = 'none';  // Hide button after it's clicked
   });
 }
 
