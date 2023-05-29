@@ -7,6 +7,12 @@ let imageSizes = [[611, 1058], [524, 479], [327, 290]];
 let audioNames = ['test1.mp3', 'test2.mp3', 'test3.mp3'];
 let audioTimers = new Array(audioNames.length);
 
+var options = {
+  enableHighAccuracy: true,
+  timeout: 5000,
+  maximumAge: 0
+};
+
 function preload() {
   for (let i = 0; i < audioNames.length; i++) {
     audioFiles[i] = loadSound('./assets/' + audioNames[i], 
@@ -14,7 +20,7 @@ function preload() {
       (err) => { console.error(err); }
     );
   }
-  polygonsData = loadJSON("./assets/data.json", dataLoaded);
+  polygonsData = loadJSON("./assets/data-1.json", dataLoaded);
   images[0] = loadImage('./assets/area1.png'); 
   images[1] = loadImage('./assets/area2.png');
   images[2] =  loadImage('./assets/area3.png');
@@ -28,6 +34,12 @@ function dataLoaded(data) {
 function setup() {
   let canvas = createCanvas(500,800);
   canvas.parent("canvas-container");
+
+  if (navigator.geolocation) {
+    navigator.geolocation.watchPosition(success, error, options);
+  } else {
+    console.log("Geolocation is not supported by this browser.");
+  }
   
   watchOptions = {
    enableHighAccuracy: true,
@@ -93,7 +105,6 @@ function positionChanged(position) {
 function draw(){
   background("#ebdfc5"); 
 
-  noFill(); 
   polygonsData.forEach((polygon, index) => {
     drawShapeFromJSON(polygon, index);
   });
@@ -249,5 +260,15 @@ boundaryCloseButton.addEventListener('click', function() {
 let googleMapsLink = document.getElementById('google-maps-link');
 googleMapsLink.href = 'https://goo.gl/maps/9CdiX8tEcJZjqnqN9?coh=178572&entry=tt';
 
+function success(pos) {
+  var crd = pos.coords;
+  console.log('Your current position is:');
+  console.log(`Latitude : ${crd.latitude}`);
+  console.log(`Longitude: ${crd.longitude}`);
+  console.log(`More or less ${crd.accuracy} meters.`);
+}
 
+function error(err) {
+  console.warn(`ERROR(${err.code}): ${err.message}`);
+}
 
