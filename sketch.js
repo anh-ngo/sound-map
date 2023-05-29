@@ -5,7 +5,7 @@ let [ isInside, userLocationAvailable ] = [ false, false ];
 let polygonsData, fences = [], images = [], audioFiles = [];
 let imageSizes = [[611, 1058], [524, 479], [327, 290]];
 let audioNames = ['test1.mp3', 'test2.mp3', 'test3.mp3'];
-let audioTimers = new Array(audioNames.length);
+// let audioTimers = new Array(audioNames.length);
 
 function preload() {
   for (let i = 0; i < audioNames.length; i++) {
@@ -158,54 +158,37 @@ let isAudioPlaying = new Array(audioNames.length).fill(false);
 function insideThePolygon(index){
   console.log("Inside Polygon: " + index);
   if (audioFiles[index]) {
-    console.log("Loading audio: " + audioNames[index]);
+    console.log("Playing audio: " + audioNames[index]);
 
-    // Check if the audio file is loaded before playing it
-    if(audioFiles[index].isLoaded()){
-      console.log("Audio loaded successfully: " + audioNames[index]);
+    // Play audio only if it is not already playing
+    if (!isAudioPlaying[index]) {
+      audioFiles[index].play();
+      isAudioPlaying[index] = true;
 
-      // Play audio only if it is not already playing
-      if (!isAudioPlaying[index]) {
-        setTimeout(() => {
-          audioFiles[index].play();
-          isAudioPlaying[index] = true;
-
-          if (!audioFiles[index].isPlaying()) {
-            console.log("Failed to play audio: " + audioNames[index]);
-          }
-        }, 3000);
+      if (!audioFiles[index].isPlaying()) {
+        console.log("Failed to play audio: " + audioNames[index]);
       }
-
-    } else {
-      console.log("Audio file is not yet loaded: " + audioNames[index]);
-    }
-    
+    } 
   } else {
     console.log("No audio file for index: " + index);
   }
 
   if (currentPlayingAudio !== null && currentPlayingAudio !== index) {
-    audioTimers[currentPlayingAudio] = setTimeout(() => {
-      audioFiles[currentPlayingAudio].stop();
-      isAudioPlaying[currentPlayingAudio] = false;
-    }, 3000);
+    audioFiles[currentPlayingAudio].stop();
+    isAudioPlaying[currentPlayingAudio] = false;
   }
 
   currentPlayingAudio = index;
 }
 
-
 function outsideThePolygon(index){
   console.log("Outside Polygon: " + index);
 
-  // Add a delay before the audio is stopped
-  audioTimers[index] = setTimeout(() => {
-    if(audioFiles[index]){
-      audioFiles[index].stop();
-      isAudioPlaying[index] = false;
-      currentPlayingAudio = null;
-    }
-  }, 3000);
+  if(audioFiles[index]){
+    audioFiles[index].stop();
+    isAudioPlaying[index] = false;
+    currentPlayingAudio = null;
+  }
 }
 
 //remove when tracking real user locations
