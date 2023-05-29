@@ -4,7 +4,7 @@ let [ latMin, latMax, lonMin, lonMax ] = [ 60.19528, 60.20006, 25.13053, 25.1376
 let [ isInside, userLocationAvailable ] = [ false, false ];
 let polygonsData, fences = [], images = [], audioFiles = [];
 let imageSizes = [[611, 1058], [524, 479], [327, 290]];
-let audioNames = ['audio1.mp3', 'audio2.mp3', 'audio3.mp3'];
+let audioNames = ['test1.mp3', 'test2.mp3', 'test3.mp3'];
 let audioTimers = new Array(audioNames.length);
 
 function preload() {
