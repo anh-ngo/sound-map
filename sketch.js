@@ -1,6 +1,6 @@
 //[60.19995, 60.19580, 25.13810, 25.13002]
 let x, y, fence, userIcon;
-let [ latMin, latMax, lonMin, lonMax ] = [ 60.19528, 60.20006, 25.13053, 25.13762 ]
+let [ latMin, latMax, lonMin, lonMax ] = [ 60.19520, 60.20036, 25.12978, 25.13839 ]
 let [ isInside, userLocationAvailable ] = [ false, false ];
 let polygonsData, fences = [], images = [], audioFiles = [];
 let imageSizes = [[611, 1058], [524, 479], [327, 290]];
@@ -106,7 +106,7 @@ function draw(){
     push();
     translate(x, y);
     imageMode(CENTER);
-    image(userIcon, 0, 0, 20, 20);
+    image(userIcon, 0, 0, 15, 15);
     pop();
   }
 }
@@ -146,6 +146,7 @@ function drawShapeFromJSON(data, index){
   push();
   translate(centroidX, centroidY);
 
+  //manually adjust the sizes and locations of the images
   let imgTranslationX = [12, 12, 3];
   let imgTranslationY = [20, -1, 5];
   let imgScale = [0.4, 0.37, 0.5];
@@ -160,11 +161,10 @@ function drawShapeFromJSON(data, index){
 let currentPlayingAudio = null;
 let isAudioPlaying = new Array(audioNames.length).fill(false);
 
+//debug this
 function insideThePolygon(index){
   console.log("Inside Polygon: " + index);
   if (audioFiles[index]) {
-    console.log("Loading audio: " + audioNames[index]);
-
     // Check if the audio file is loaded before playing it
     if(audioFiles[index].isLoaded()){
       console.log("Audio loaded successfully: " + audioNames[index]);
