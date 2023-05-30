@@ -1,19 +1,21 @@
-//[60.19995, 60.19580, 25.13810, 25.13002]
+let boundaryPopup = document.getElementById('boundary-popup');
+let boundaryCloseButton = document.getElementById('boundary-close-button');
+boundaryCloseButton.addEventListener('click', function() {
+  boundaryPopup.style.display = 'none';
+});
+
 let x, y, fence, userIcon;
 let [ latMin, latMax, lonMin, lonMax ] = [ 60.19520, 60.20036, 25.12978, 25.13839 ]
-let [ isInside, userLocationAvailable ] = [ false, false ];
-let polygonsData, fences = [], images = [], audioFiles = [];
+let polygonsData, fences = [], images = [], audioFiles = [], userLocationAvailable = false;
 let imageSizes = [[611, 1058], [524, 479], [327, 290]];
-let audioNames = ['test1.mp3', 'test2.mp3', 'test3.mp3'];
 
 function preload() {
-  for (let i = 0; i < audioNames.length; i++) {
-    audioFiles[i] = loadSound('./assets/' + audioNames[i], 
-      () => { console.log('Audio loaded successfully'); }, 
-      (err) => { console.error(err); }
-    );
-  }
-  polygonsData = loadJSON("./assets/data-1.json", dataLoaded);
+  polygonsData = loadJSON("./assets/data-1.json");
+  audioFiles = ['test1.mp3', 'test2.mp3', 'test3.mp3'].map((file) =>
+    loadSound('./assets/' + file, 
+      () => console.log(`${file} loaded successfully`), 
+      (err) => console.error(`Failed to load ${file}`, err))
+  );
   images[0] = loadImage('./assets/area1.png'); 
   images[1] = loadImage('./assets/area2.png');
   images[2] =  loadImage('./assets/area3.png');
@@ -28,34 +30,29 @@ function setup() {
   let canvas = createCanvas(500,800);
   canvas.parent("canvas-container");
   
-  watchOptions = {
-    enableHighAccuracy: true,
+  watchPosition(positionChanged, {
+    enableHighAccuracy: false, //"false" helps to fetch the location faster
     timeout: 500,
     maximumAge: 0
-  };
+  });
   
-  watchPosition(positionChanged, watchOptions);
-  
-  polygonsData.forEach((polygon, index) => {
+polygonsData.features.forEach((polygon, index) => {
     let fence = new geoFencePolygon(
-      polygon.geometry.coordinates[0], // Reverse the order of coordinates
+      polygon.geometry.coordinates[0],
       () => insideThePolygon(index),
       () => outsideThePolygon(index),
-      'km'
+      'mi'
     );
-    fences.push({ points: polygon.geometry.coordinates[0], fence: fence });
+    fences.push(fence);
   });
 
   // Add event listener to the HTML button for getting user interaction to start audio
-  let audioStartButton = document.getElementById('audio-start-button');
-  audioStartButton.addEventListener('click', function() {
+  document.getElementById('audio-start-button').addEventListener('click', function() {
     userStartAudio();
-    this.style.display = 'none';  // Hide button after it's clicked
+    this.style.display = 'none';
   });
 }
 
-
-//update this function to track real user locations later
 function positionChanged(position) {
   if (!position) {
     console.log('Could not get position:', position);
@@ -66,39 +63,35 @@ function positionChanged(position) {
   let lon = position.longitude;
   console.log('User position: Latitude -', lat, 'Longitude -', lon);
   
-  // Check if the user is within the boundary
-  if (lat >= latMin && lat <= latMax && lon >= lonMin && lon <= lonMax) {
-    // User is inside the boundary
-    x = map(lon, lonMin, lonMax, 0, width);
-    y = map(lat, latMin, latMax, height, 0);
+// Check if the user is within the boundary
+if (lat >= latMin && lat <= latMax && lon >= lonMin && lon <= lonMax) {
+  x = map(lon, lonMin, lonMax, 0, width);
+  y = map(lat, latMin, latMax, height, 0);
 
-    // Check if the user's position is inside any polygon
-    fences.forEach((fenceObj, index) => {
-      if (pointInPolygon(lon, lat, fenceObj.points)) {
-        insideThePolygon(index);
-      } else {
-        outsideThePolygon(index);
-      }
-    });
-
-    // Hide the popup
-    boundaryPopup.style.display = 'none';
-
-    userLocationAvailable = true;
-  } else {
-    // User is outside the boundary
-    // Show the popup
-    boundaryPopup.style.display = 'flex';
-
-    userLocationAvailable = false;
+  // Check if the user is inside any geofence
+  let insideAnyPolygon = false;
+  for (let i = 0; i < fences.length; i++) {
+    if (fences[i].insideFence) {
+      insideAnyPolygon = true;
+      insideThePolygon(i); // Play sound corresponding to the polygon index
+    } else {
+      outsideThePolygon(i); // Stop playing sound for the polygon index
+    }
   }
+  // Hide the popup
+  boundaryPopup.style.display = 'none';
+  userLocationAvailable = true;
+} else {
+  // User is outside the boundary
+  boundaryPopup.style.display = 'flex';
+  userLocationAvailable = false;
 }
-
+}
 
 function draw(){
   background("#ebdfc5"); 
 
-  polygonsData.forEach((polygon, index) => {
+  polygonsData.features.forEach((polygon, index) => {
     drawShapeFromJSON(polygon, index);
   });
 
@@ -140,16 +133,15 @@ function drawShapeFromJSON(data, index){
   }
   endShape(CLOSE);
   
+  //set the images at the centers of the polygons
   let centroidX = totalX / data.geometry.coordinates[0].length;
   let centroidY = totalY / data.geometry.coordinates[0].length;
 
   push();
   translate(centroidX, centroidY);
-
-  //manually adjust the sizes and locations of the images
-  let imgTranslationX = [12, 12, 3];
+  let imgTranslationX = [12, 12, 5]; //manually adjust the sizes and locations of the images
   let imgTranslationY = [20, -1, 5];
-  let imgScale = [0.4, 0.37, 0.5];
+  let imgScale = [0.37, 0.35, 0.54];
   translate(imgTranslationX[index % imgTranslationX.length], imgTranslationY[index % imgTranslationY.length]);
   
   let imgWidth = imageSizes[index % imageSizes.length][0] * imgScale[index % imgScale.length];
@@ -159,51 +151,32 @@ function drawShapeFromJSON(data, index){
 }
 
 let currentPlayingAudio = null;
-let isAudioPlaying = new Array(audioNames.length).fill(false);
+let isAudioPlaying = new Array(audioFiles.length).fill(false);
 
-//debug this
-function insideThePolygon(index){
+function insideThePolygon(index) {
   console.log("Inside Polygon: " + index);
+
+  // Play audio corresponding to the polygon index
   if (audioFiles[index]) {
-    // Check if the audio file is loaded before playing it
-    if(audioFiles[index].isLoaded()){
-      console.log("Audio loaded successfully: " + audioNames[index]);
+    audioFiles[index].play();
 
-      // Play audio only if it is not already playing
-      if (!isAudioPlaying[index]) {
-        audioFiles[index].play();
-        isAudioPlaying[index] = true;
-
-        if (!audioFiles[index].isPlaying()) {
-          console.log("Failed to play audio: " + audioNames[index]);
-        }
-      }
-
-    } else {
-      console.log("Audio file is not yet loaded: " + audioNames[index]);
+    if (!audioFiles[index].isPlaying()) {
+      console.log("Failed to play audio: " + audioFiles[index]);
     }
-    
-  } else {
-    console.log("No audio file for index: " + index);
   }
-
-  if (currentPlayingAudio !== null && currentPlayingAudio !== index) {
-    audioFiles[currentPlayingAudio].stop();
-    isAudioPlaying[currentPlayingAudio] = false;
-  }
-
-  currentPlayingAudio = index;
+    // // Stop the audio of other polygons if playing
+    // if (currentPlayingAudio !== null && currentPlayingAudio !== index) {
+    //   audioFiles[currentPlayingAudio].stop();
+    // }
+    // currentPlayingAudio = index;
 }
 
-
-function outsideThePolygon(index){
+function outsideThePolygon(index) {
   console.log("Outside Polygon: " + index);
 
-  // Immediately stop the audio when the user leaves the polygon
-  if(audioFiles[index]){
+  // Stop playing audio for the specific polygon index
+  if (audioFiles[index]) {
     audioFiles[index].stop();
-    isAudioPlaying[index] = false;
-    currentPlayingAudio = null;
   }
 }
 
@@ -220,20 +193,6 @@ function outsideThePolygon(index){
 //   positionChanged(simulatedPosition); // update the position on the canvas
 // }
 
-//Important! check the initial state of user's location for the callbacks to work
-function pointInPolygon(x, y, polygon) {
-  let inside = false;
-  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    let xi = polygon[i][0],
-        yi = polygon[i][1];
-    let xj = polygon[j][0],
-        yj = polygon[j][1];
-    let intersect = ((yi > y) != (yj > y)) &&
-                    (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-    if (intersect) inside = !inside;
-  }
-  return inside;
-}
 
 let openButton = document.getElementById('open-button');
 let closeButton = document.getElementById('close-button');
@@ -245,12 +204,6 @@ openButton.addEventListener('click', function() {
 
 closeButton.addEventListener('click', function() {
   popup.style.display = 'none';
-});
-
-let boundaryPopup = document.getElementById('boundary-popup');
-let boundaryCloseButton = document.getElementById('boundary-close-button');
-boundaryCloseButton.addEventListener('click', function() {
-  boundaryPopup.style.display = 'none';
 });
 
 let googleMapsLink = document.getElementById('google-maps-link');

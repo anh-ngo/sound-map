@@ -115,7 +115,13 @@ li {
   height: 40px;
 }
 
-#open-button, #close-button, #boundary-close-button {
+#audio-start-button {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+}
+
+#open-button, #close-button, #boundary-close-button, #audio-start-button {
   background-color: #ffffff;
   border: 1px dashed black;
   padding: 5px;
