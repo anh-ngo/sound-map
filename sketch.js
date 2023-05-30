@@ -5,7 +5,7 @@ boundaryCloseButton.addEventListener('click', function() {
 });
 
 let x, y, fence, userIcon;
-let [ latMin, latMax, lonMin, lonMax ] = [ 60.19528, 60.20006, 25.13053, 25.13762 ];
+let [ latMin, latMax, lonMin, lonMax ] = [ 60.19515, 60.20036, 25.12969, 25.13841 ];
 let [ isInside, userLocationAvailable ] = [ false, false ];
 let polygonsData, fences = [], images = [], audioFiles = [];
 let imageSizes = [[611, 1058], [524, 479], [327, 290]];
