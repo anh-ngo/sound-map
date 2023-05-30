@@ -44,8 +44,9 @@ function setup() {
   watchPosition(positionChanged, watchOptions);
   
   polygonsData.forEach((polygon, index) => {
+    let formattedCoordinates = polygon.geometry.coordinates[0].map(coord => ({ lon: coord[0], lat: coord[1] }));
     let fence = new geoFencePolygon(
-      polygon.geometry.coordinates[0], // Reverse the order of coordinates
+      formattedCoordinates,
       () => insideThePolygon(index),
       () => outsideThePolygon(index),
       'km'
