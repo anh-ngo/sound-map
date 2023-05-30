@@ -5,12 +5,12 @@ boundaryCloseButton.addEventListener('click', function() {
 });
 
 let x, y, fence, userIcon;
-let [ latMin, latMax, lonMin, lonMax ] = [ 60.19515, 60.20036, 25.12969, 25.13841 ];
+let [ latMin, latMax, lonMin, lonMax ] = [ 60.19528, 60.20006, 25.13053, 25.13762 ];
 let [ isInside, userLocationAvailable ] = [ false, false ];
 let polygonsData, fences = [], images = [], audioFiles = [];
 let imageSizes = [[611, 1058], [524, 479], [327, 290]];
 let audioNames = ['test1.mp3', 'test2.mp3', 'test3.mp3'];
-let timeoutHandles = new Array(audioFiles.length);
+let audioTimers = new Array(audioNames.length);
 
 
 function preload() {
@@ -28,19 +28,8 @@ function preload() {
 }
 
 function dataLoaded(data) {
-    polygonsData = data.features;
-  
-    polygonsData.forEach((polygon, index) => {
-      let formattedCoordinates = polygon.geometry.coordinates[0].map(coord => ({ lon: coord[0], lat: coord[1] }));
-      let fence = new geoFencePolygon(
-        formattedCoordinates,
-        () => insideThePolygon(index),
-        () => outsideThePolygon(index),
-        'km'
-      );
-      fences.push({ points: polygon.geometry.coordinates[0], fence: fence });
-    });
-  }
+  polygonsData = data.features;
+}
 
 function setup() {
   let canvas = createCanvas(500,800);
@@ -53,6 +42,17 @@ function setup() {
   };
   
   watchPosition(positionChanged, watchOptions);
+  
+  polygonsData.forEach((polygon, index) => {
+    let formattedCoordinates = polygon.geometry.coordinates[0].map(coord => ({ lon: coord[0], lat: coord[1] }));
+    let fence = new geoFencePolygon(
+      formattedCoordinates,
+      () => insideThePolygon(index),
+      () => outsideThePolygon(index),
+      'km'
+    );
+    fences.push({ points: polygon.geometry.coordinates[0], fence: fence });
+  });
 
   // Add event listener to the HTML button for getting user interaction to start audio
   document.getElementById('audio-start-button').addEventListener('click', function() {
@@ -71,8 +71,7 @@ function positionChanged(position) {
 
   let lat = position.latitude; //y
   let lon = position.longitude; //x
-  let accuracy = position.accuracy;
-  console.log('User position: Latitude -', lat, 'Longitude -', lon, 'Accuracy -', accuracy);
+  console.log('User position: Latitude -', lat, 'Longitude -', lon);
   
 // Check if the user is within the boundary
 if (lat >= latMin && lat <= latMax && lon >= lonMin && lon <= lonMax) {
@@ -169,45 +168,32 @@ let isAudioPlaying = new Array(audioFiles.length).fill(false);
 function insideThePolygon(index) {
   console.log("Inside Polygon: " + index);
 
-  // If audio for this index is not already playing, play it
-  if (!isAudioPlaying[index]) {
-    if (audioFiles[index]) {
-      audioFiles[index].play();
-      isAudioPlaying[index] = true;
-      console.log("Playing audio: " + audioNames[index]);
-      if (timeoutHandles[index]) {
-        clearTimeout(timeoutHandles[index]);
-        timeoutHandles[index] = null;
-      }
-    }
-  }
-  // If another audio is playing, stop it immediately
-  if (currentPlayingAudio !== null && currentPlayingAudio !== index) {
-    if (timeoutHandles[currentPlayingAudio]) {
-      clearTimeout(timeoutHandles[currentPlayingAudio]);
-    }
-    audioFiles[currentPlayingAudio].stop();
-    isAudioPlaying[currentPlayingAudio] = false;
-    console.log("Stopped audio: " + audioNames[currentPlayingAudio]);
-  }
+  // Play audio corresponding to the polygon index
+  if (audioFiles[index]) {
+    audioFiles[index].play();
 
-  currentPlayingAudio = index;
+    if (!audioFiles[index].isPlaying()) {
+      console.log("Failed to play audio: " + audioFiles[index]);
+    }
+  }
+    // Stop the audio of other polygons if playing
+    if (currentPlayingAudio !== null && currentPlayingAudio !== index) {
+      audioFiles[currentPlayingAudio].stop();
+      isAudioPlaying[currentPlayingAudio] = false;
+    }
+    currentPlayingAudio = index;
 }
+
 function outsideThePolygon(index){
   console.log("Outside Polygon: " + index);
 
-  // If audio for this index is playing, stop it after a delay
-  if (isAudioPlaying[index]) {
-    if (timeoutHandles[index]) {
-      clearTimeout(timeoutHandles[index]);
-    }
-    timeoutHandles[index] = setTimeout(() => {
-      if(audioFiles[index]) {
-        audioFiles[index].stop();
-        isAudioPlaying[index] = false;
-        console.log("Stopped audio: " + audioNames[index]);
-      }
-    }, 5000);  // 5 seconds delay before stopping the audio
+  if(audioFiles[index]){
+    // Set a 5 seconds delay before stopping the audio
+    setTimeout(function() {
+      audioFiles[index].stop();
+      isAudioPlaying[index] = false;
+      currentPlayingAudio = null;
+    }, 5000); // 5000 milliseconds = 5 seconds
   }
 }
 
@@ -246,5 +232,4 @@ googleMapsLink.href = 'https://goo.gl/maps/9CdiX8tEcJZjqnqN9?coh=178572&entry=tt
 //   };
 //   positionChanged(simulatedPosition); // update the position on the canvas
 // }
-
 
