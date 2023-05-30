@@ -87,19 +87,17 @@ if (lat >= latMin && lat <= latMax && lon >= lonMin && lon <= lonMax) {
   userLocationAvailable = false;
 }
 
-// Check if the user is inside any geofence
-let insideAnyPolygon = false;
-for (let i = 0; i < fences.length; i++) {
-  if (fences[i].insideFence) {
-    insideAnyPolygon = true;
-    insideThePolygon(i); // Play sound corresponding to the polygon index
-    console.log("User is inside geofence: " + i); 
-    insideAnyPolygon = false
-  } else {
-    outsideThePolygon(i); // Stop playing sound for the polygon index
-    console.log("User is not inside any geofence");
-  }
-}
+// // Check if the user is inside any geofence
+// let insideAnyPolygon = false;
+// for (let i = 0; i < fences.length; i++) {
+//   if (fences[i].insideFence) {
+//     insideAnyPolygon = true;
+//     insideThePolygon(i); // Play sound corresponding to the polygon index
+//     insideAnyPolygon = false
+//   } else {
+//     outsideThePolygon(i); // Stop playing sound for the polygon index
+//   }
+// }
 }
 
 function draw(){
@@ -168,7 +166,7 @@ let currentPlayingAudio = null;
 let isAudioPlaying = new Array(audioFiles.length).fill(false);
 
 function insideThePolygon(index) {
-  // console.log("Inside Polygon: " + index);
+  console.log("Inside Polygon: " + index);
 
   // Play audio corresponding to the polygon index
   if (audioFiles[index]) {
@@ -187,7 +185,7 @@ function insideThePolygon(index) {
 }
 
 function outsideThePolygon(index){
-  // console.log("Outside Polygon: " + index);
+  console.log("Outside Polygon: " + index);
 
   if(audioFiles[index]){
     audioFiles[index].stop();
