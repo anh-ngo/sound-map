@@ -126,11 +126,11 @@ function draw() {
   document.getElementById('song-name').innerHTML = soundText;
   
   // if(userLocationAvailable) {
-    push();
-    translate(x, y);
+    // push();
+    // translate(x, y);
     imageMode(CENTER);
-    image(userIcon, 0, 0, 15, 15);
-    pop();
+    image(userIcon, x, y, 15, 15);
+    // pop();
 }
 
 function gpsToPixelX(valX) {
