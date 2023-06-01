@@ -20,7 +20,7 @@ let x, y, userIcon, userLocationAvailable = false;
 let [ latMin, latMax, lonMin, lonMax ] = [ 60.19528, 60.20006, 25.13053, 25.13762 ];
 let polygonsData, polygons = [], images = [], audioFiles = [];
 const imageSizes = [[611, 1058], [524, 479], [327, 290]];
-const audioNames = ['test1.mp3', 'test2.mp3', 'test3.mp3'];
+const audioNames = ['audio1.mp3', 'audio2.mp3', 'audio3.mp3'];
 const polygonNames = ['Her Ocean', 'Emerald Prayer','Ethereality of Beloved'];
 let soundText = "";
 
@@ -117,7 +117,7 @@ function draw() {
       }
     }
     if(polygon.audioFile.isPlaying()){
-      soundText = polygon.name;
+      soundText = `🎵&nbsp;&nbsp;${polygon.name}`;
     }
   });
   
@@ -127,7 +127,7 @@ function draw() {
     push();
     translate(x, y);
     imageMode(CENTER);
-    image(userIcon, 0, 0, 20, 20);
+    image(userIcon, 0, 0, 15, 15);
     pop();
   }
 }
