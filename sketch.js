@@ -57,7 +57,7 @@ function setup() {
   watchOptions = {
    enableHighAccuracy: true,
    timeout: 500,
-   maximumAge: 500
+   maximumAge: 0
   };
   
   watchPosition(positionChanged, watchOptions);
@@ -143,7 +143,7 @@ function gpsToPixelY(valY) {
 function drawShapeFromPoints(polygon) {
   let polygonPoints = polygon.points;
   noStroke();
-  // noFill();
+  noFill();
   imageMode(CENTER);
 
   beginShape();
