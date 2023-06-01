@@ -90,6 +90,8 @@ function positionChanged(position) {
   let lat = position.latitude; //y
   let lon = position.longitude; //x
   console.log('User position: Latitude -', lat, 'Longitude -', lon);
+  x = map(lon, lonMin, lonMax, 0, width);
+  y = map(lat, latMin, latMax, height, 0);
   
   // // Check if the user is within the boundary
   // if (lat >= latMin && lat <= latMax && lon >= lonMin && lon <= lonMax) {
