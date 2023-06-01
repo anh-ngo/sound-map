@@ -1,30 +1,49 @@
-let boundaryPopup = document.getElementById('boundary-popup');
-let boundaryCloseButton = document.getElementById('boundary-close-button');
-boundaryCloseButton.addEventListener('click', function() {
+//popup pages
+const boundaryPopup = document.getElementById('boundary-popup');
+const boundaryCloseButton = document.getElementById('boundary-close-button');
+window.addEventListener('DOMContentLoaded', () => {
+  boundaryPopup.style.display = 'flex';
+});
+boundaryCloseButton.addEventListener('click', () => {
   boundaryPopup.style.display = 'none';
+  userStartAudio();
 });
 
-let x, y, fence, userIcon;
-let [ latMin, latMax, lonMin, lonMax ] = [ 60.19528, 60.20006, 25.13053, 25.13762 ];
-let [ isInside, userLocationAvailable ] = [ false, false ];
-let polygonsData, fences = [], images = [], audioFiles = [];
-let imageSizes = [[611, 1058], [524, 479], [327, 290]];
-let audioNames = ['test1.mp3', 'test2.mp3', 'test3.mp3'];
-let audioTimers = new Array(audioNames.length);
+const openButton = document.getElementById('open-button');
+const closeButton = document.getElementById('close-button');
+const popup = document.getElementById('popup');
+openButton.addEventListener('click', () => popup.style.display = 'flex');
+closeButton.addEventListener('click', () => popup.style.display = 'none');
 
+//variables
+let x, y, userIcon, userLocationAvailable = false;
+let [ latMin, latMax, lonMin, lonMax ] = [ 60.19528, 60.20006, 25.13053, 25.13762 ];
+let polygonsData, polygons = [], images = [], audioFiles = [];
+const imageSizes = [[611, 1058], [524, 479], [327, 290]];
+const audioNames = ['test1.mp3', 'test2.mp3', 'test3.mp3'];
+const polygonNames = ['Her Ocean', 'Emerald Prayer','Ethereality of Beloved'];
+let soundText = "";
 
 function preload() {
+  polygonsData = loadJSON("./assets/data-1.json", dataLoaded);
+  userIcon = loadImage('./assets/bee-icon.png');
+  loadAudios();
+  loadImages();
+}
+
+function loadAudios() {
   for (let i = 0; i < audioNames.length; i++) {
-    audioFiles[i] = loadSound('./assets/' + audioNames[i], 
-      () => { console.log('Audio loaded successfully'); }, 
-      (err) => { console.error(err); }
+    audioFiles[i] = loadSound(`./assets/${audioNames[i]}`, 
+      () => console.log('Audio loaded successfully'), 
+      (err) => console.error(err)
     );
   }
-  polygonsData = loadJSON("./assets/data-1.json", dataLoaded);
-  images[0] = loadImage('./assets/area1.png'); 
-  images[1] = loadImage('./assets/area2.png');
-  images[2] =  loadImage('./assets/area3.png');
-  userIcon = loadImage('./assets/bee-icon.svg');
+}
+
+function loadImages() {
+  for(let i = 0; i < 3; i++) {
+    images[i] = loadImage(`./assets/area${i+1}.png`);
+  }
 }
 
 function dataLoaded(data) {
@@ -37,30 +56,30 @@ function setup() {
 
   watchOptions = {
    enableHighAccuracy: true,
-   timeout: 500,
-   maximumAge: 0
+   timeout: 1000,
+   maximumAge: 1000
   };
   
   watchPosition(positionChanged, watchOptions);
   
   polygonsData.forEach((polygon, index) => {
     let formattedCoordinates = polygon.geometry.coordinates[0].map(coord => ({ lon: coord[0], lat: coord[1] }));
-    let fence = new geoFencePolygon(
-      formattedCoordinates,
-      () => insideThePolygon(index),
-      () => outsideThePolygon(index),
-      'km'
-    );
-    fences.push({ points: polygon.geometry.coordinates[0], fence: fence });
+    let polygonObj = {
+      points: polygon.geometry.coordinates[0],
+      audioFile: audioFiles[index],
+      name: polygonNames[index],
+      polygonImg: images[index],
+      timer: 0,
+      isTiming: false,
+      fence: new geoFencePolygon(
+        formattedCoordinates,
+        () => insideThePolygon(polygonObj),
+        () => outsideThePolygon(polygonObj),
+        'km'
+      )
+    };
+    polygons.push(polygonObj);
   });
-
-  // Add event listener to the HTML button for getting user interaction to start audio
-  document.getElementById('audio-start-button').addEventListener('click', function() {
-    userStartAudio();
-    this.style.display = 'none';
-  });
-
-  // simulatePositionChange(60.19846, 25.13218); // A point inside a known geofence
 }
 
 function positionChanged(position) {
@@ -68,45 +87,42 @@ function positionChanged(position) {
     console.log('Could not get position:', position);
     return;
   }
-
   let lat = position.latitude; //y
   let lon = position.longitude; //x
   console.log('User position: Latitude -', lat, 'Longitude -', lon);
   
-// Check if the user is within the boundary
-if (lat >= latMin && lat <= latMax && lon >= lonMin && lon <= lonMax) {
-  x = map(lon, lonMin, lonMax, 0, width);
-  y = map(lat, latMin, latMax, height, 0);
-
-  // Hide the popup
-  boundaryPopup.style.display = 'none';
-  userLocationAvailable = true;
-} else {
-  // User is outside the boundary
-  boundaryPopup.style.display = 'flex';
-  userLocationAvailable = false;
+  // Check if the user is within the boundary
+  if (lat >= latMin && lat <= latMax && lon >= lonMin && lon <= lonMax) {
+    x = map(lon, lonMin, lonMax, 0, width);
+    y = map(lat, latMin, latMax, height, 0);
+    userLocationAvailable = true;
+  } else {
+    userLocationAvailable = false;
+  }
 }
 
-// // Check if the user is inside any geofence
-// let insideAnyPolygon = false;
-// for (let i = 0; i < fences.length; i++) {
-//   if (fences[i].insideFence) {
-//     insideAnyPolygon = true;
-//     insideThePolygon(i); // Play sound corresponding to the polygon index
-//     insideAnyPolygon = false
-//   } else {
-//     outsideThePolygon(i); // Stop playing sound for the polygon index
-//   }
-// }
-}
-
-function draw(){
+function draw() {
   background("#ebdfc5"); 
+  
+  soundText ="";
 
-  polygonsData.forEach((polygon, index) => {
-    drawShapeFromJSON(polygon, index);
+  polygons.forEach((polygon) => {
+    drawShapeFromPoints(polygon);
+    if(polygon.isTiming){
+      polygon.timer++;
+      // console.log(polygon.name, polygon.timer);
+      if(polygon.timer > 600){ //change to miliseconds
+        polygon.audioFile.stop();
+        polygon.isTiming = false;
+      }
+    }
+    if(polygon.audioFile.isPlaying()){
+      soundText = polygon.name;
+    }
   });
-
+  
+  document.getElementById('song-name').innerHTML = soundText;
+  
   if(userLocationAvailable) {
     push();
     translate(x, y);
@@ -124,17 +140,19 @@ function gpsToPixelY(valY) {
   return map(valY, latMin, latMax, height, 0); 
 }
 
-function drawShapeFromJSON(data, index){
+function drawShapeFromPoints(polygon) {
+  let polygonPoints = polygon.points;
   noStroke();
+  // noFill();
   imageMode(CENTER);
 
   beginShape();
   let totalX = 0;
   let totalY = 0;
   
-  for (let i = 0; i < data.geometry.coordinates[0].length; i++) {
-    let lon = data.geometry.coordinates[0][i][0];
-    let lat = data.geometry.coordinates[0][i][1];
+  for (let i = 0; i < polygonPoints.length; i++) {
+    let lon = polygonPoints[i][0];
+    let lat = polygonPoints[i][1];
     let px = gpsToPixelX(lon);
     let py = gpsToPixelY(lat);
     
@@ -145,91 +163,44 @@ function drawShapeFromJSON(data, index){
   }
   endShape(CLOSE);
   
-  //set the images at the centers of the polygons
-  let centroidX = totalX / data.geometry.coordinates[0].length;
-  let centroidY = totalY / data.geometry.coordinates[0].length;
-
-  push();
-  translate(centroidX, centroidY);
-  let imgTranslationX = [12, 12, 5]; //manually adjust the sizes and locations of the images
-  let imgTranslationY = [20, -1, 5];
-  let imgScale = [0.37, 0.35, 0.54];
-  translate(imgTranslationX[index % imgTranslationX.length], imgTranslationY[index % imgTranslationY.length]);
+  let centroidX = totalX / polygonPoints.length;
+  let centroidY = totalY / polygonPoints.length;
   
-  let imgWidth = imageSizes[index % imageSizes.length][0] * imgScale[index % imgScale.length];
-  let imgHeight = imageSizes[index % imageSizes.length][1] * imgScale[index % imgScale.length];
-  image(images[index % images.length], 0, 0, imgWidth, imgHeight);
-  pop(); 
+  push();
+  // Use the calculated centroid coordinates directly to draw the image.
+  // let imgTranslationX = [20, 10, 3]; // Manually adjust the sizes and locations of the images
+  // let imgTranslationY = [20, -1, 3];
+  // translate(imgTranslationX[polygons.indexOf(polygon) % imgTranslationX.length], imgTranslationY[polygons.indexOf(polygon) % imgTranslationY.length]);
+  let imgScale = [0.43, 0.36, 0.56];
+  let imgWidth = imageSizes[polygons.indexOf(polygon) % imageSizes.length][0] * imgScale[polygons.indexOf(polygon) % imgScale.length];
+  let imgHeight = imageSizes[polygons.indexOf(polygon) % imageSizes.length][1] * imgScale[polygons.indexOf(polygon) % imgScale.length];
+  image(polygon.polygonImg, centroidX, centroidY, imgWidth, imgHeight);
+  pop();
 }
 
-let currentPlayingAudio = null;
-let isAudioPlaying = new Array(audioFiles.length).fill(false);
-
-function insideThePolygon(index) {
-  console.log("Inside Polygon: " + index);
-
-  // Play audio corresponding to the polygon index
-  if (audioFiles[index]) {
-    audioFiles[index].play();
-
-    if (!audioFiles[index].isPlaying()) {
-      console.log("Failed to play audio: " + audioFiles[index]);
+function insideThePolygon(polygon) {
+  console.log("Inside Polygon: " + polygon.name);
+  
+  // If audio for this polygon is not already playing, play it
+  if (!polygon.audioFile.isPlaying()) {
+    if (polygon.audioFile) {
+      polygon.audioFile.loop();
+      console.log("Playing audio: " + polygon.audioFile.file);
     }
   }
-    // Stop the audio of other polygons if playing
-    if (currentPlayingAudio !== null && currentPlayingAudio !== index) {
-      audioFiles[currentPlayingAudio].stop();
-      isAudioPlaying[currentPlayingAudio] = false;
+
+  // Stop any other audio that might be playing
+  polygons.forEach((otherPolygon) => {
+    if (otherPolygon !== polygon && otherPolygon.audioFile.isPlaying()) {
+      otherPolygon.audioFile.stop();
+      console.log("Stopped audio: " + otherPolygon.audioFile.file);
     }
-    currentPlayingAudio = index;
+  });
+  polygon.timer = 0;
+  polygon.isTiming = false;
 }
 
-function outsideThePolygon(index){
-  console.log("Outside Polygon: " + index);
-
-  if(audioFiles[index]){
-    // Set a 5 seconds delay before stopping the audio
-    setTimeout(function() {
-      audioFiles[index].stop();
-      isAudioPlaying[index] = false;
-      currentPlayingAudio = null;
-    }, 5000); // 5000 milliseconds = 5 seconds
-  }
+function outsideThePolygon(polygon) {
+  console.log("Outside Polygon: " + polygon.name);
+  polygon.isTiming = true;
 }
-
-//remove when tracking real user locations
-// function simulatePositionChange() {
-//   let latInput = select("#latitudeInput");
-//   let lonInput = select("#longitudeInput");
-
-//   let simulatedPosition = {
-//     latitude: parseFloat(latInput.value()),
-//     longitude: parseFloat(lonInput.value())
-//   };
-
-//   positionChanged(simulatedPosition); // update the position on the canvas
-// }
-
-let openButton = document.getElementById('open-button');
-let closeButton = document.getElementById('close-button');
-let popup = document.getElementById('popup');
-
-openButton.addEventListener('click', function() {
-  popup.style.display = 'flex';
-});
-
-closeButton.addEventListener('click', function() {
-  popup.style.display = 'none';
-});
-
-let googleMapsLink = document.getElementById('google-maps-link');
-googleMapsLink.href = 'https://goo.gl/maps/9CdiX8tEcJZjqnqN9?coh=178572&entry=tt';
-
-// function simulatePositionChange(lat, lon) {
-//   let simulatedPosition = {
-//     latitude: lat,
-//     longitude: lon
-//   };
-//   positionChanged(simulatedPosition); // update the position on the canvas
-// }
-

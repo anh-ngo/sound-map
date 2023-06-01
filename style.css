@@ -31,12 +31,12 @@ canvas {
 }
 
 p {
-  line-height: 1em;
+  line-height: 1.5em;
   font-size: 15px;
 }
 
 #canvas-container {
-  position: relative;
+  position: absolute;
   top: 0;
   left: 0;
   overflow: auto;
@@ -136,6 +136,22 @@ li {
 #google-maps-link {
   color: black;
   text-decoration: underline;
+}
+
+@keyframes transparencyAnimate{
+  0%{ opacity: 0;}
+  100%{ opacity: 0.8;}
+}
+#song-name{
+  position: absolute;
+  font-family: 'Headline', serif;
+  font-style: italic;
+  font-weight: 10;
+  right:20px;
+  top:18px;
+  font-size: 20px;
+  text-decoration: dashed 1px black;
+  animation:transparencyAnimate 2s;
 }
 
 @media (max-width: 700px) {
