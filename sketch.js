@@ -57,7 +57,7 @@ function setup() {
   watchOptions = {
    enableHighAccuracy: true,
    timeout: 1000,
-   maximumAge: 1000
+   maximumAge: 500
   };
   
   watchPosition(positionChanged, watchOptions);
@@ -91,14 +91,14 @@ function positionChanged(position) {
   let lon = position.longitude; //x
   console.log('User position: Latitude -', lat, 'Longitude -', lon);
   
-  // Check if the user is within the boundary
-  if (lat >= latMin && lat <= latMax && lon >= lonMin && lon <= lonMax) {
-    x = map(lon, lonMin, lonMax, 0, width);
-    y = map(lat, latMin, latMax, height, 0);
-    userLocationAvailable = true;
-  } else {
-    userLocationAvailable = false;
-  }
+  // // Check if the user is within the boundary
+  // if (lat >= latMin && lat <= latMax && lon >= lonMin && lon <= lonMax) {
+  //   x = map(lon, lonMin, lonMax, 0, width);
+  //   y = map(lat, latMin, latMax, height, 0);
+  //   userLocationAvailable = true;
+  // } else {
+  //   userLocationAvailable = false;
+  // }
 }
 
 function draw() {
@@ -123,13 +123,12 @@ function draw() {
   
   document.getElementById('song-name').innerHTML = soundText;
   
-  if(userLocationAvailable) {
+  // if(userLocationAvailable) {
     push();
     translate(x, y);
     imageMode(CENTER);
     image(userIcon, 0, 0, 15, 15);
     pop();
-  }
 }
 
 function gpsToPixelX(valX) {
