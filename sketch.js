@@ -56,7 +56,7 @@ function setup() {
 
   watchOptions = {
    enableHighAccuracy: true,
-   timeout: 1000,
+   timeout: 500,
    maximumAge: 500
   };
   
@@ -90,17 +90,15 @@ function positionChanged(position) {
   let lat = position.latitude; //y
   let lon = position.longitude; //x
   console.log('User position: Latitude -', lat, 'Longitude -', lon);
-  x = map(lon, lonMin, lonMax, 0, width);
-  y = map(lat, latMin, latMax, height, 0);
   
-  // // Check if the user is within the boundary
-  // if (lat >= latMin && lat <= latMax && lon >= lonMin && lon <= lonMax) {
-  //   x = map(lon, lonMin, lonMax, 0, width);
-  //   y = map(lat, latMin, latMax, height, 0);
-  //   userLocationAvailable = true;
-  // } else {
-  //   userLocationAvailable = false;
-  // }
+  // Check if the user is within the boundary
+  if (lat >= latMin && lat <= latMax && lon >= lonMin && lon <= lonMax) {
+    x = map(lon, lonMin, lonMax, 0, width);
+    y = map(lat, latMin, latMax, height, 0);
+    userLocationAvailable = true;
+  } else {
+    userLocationAvailable = false;
+  }
 }
 
 function draw() {
@@ -125,12 +123,13 @@ function draw() {
   
   document.getElementById('song-name').innerHTML = soundText;
   
-  // if(userLocationAvailable) {
-    // push();
-    // translate(x, y);
+  if(userLocationAvailable) {
+    push();
+    translate(x, y);
     imageMode(CENTER);
-    image(userIcon, x, y, 15, 15);
-    // pop();
+    image(userIcon, 0, 0, 15, 15);
+    pop();
+  }
 }
 
 function gpsToPixelX(valX) {
